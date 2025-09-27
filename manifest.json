@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FB post url unhash",
-  "version": "0.2.1",
+  "version": "0.2.2",
 
   "description": "Convert Facebook post hash URLs to numeric IDs",
 
