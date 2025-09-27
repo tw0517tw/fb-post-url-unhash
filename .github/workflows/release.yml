@@ -22,19 +22,14 @@ jobs:
 
     - name: Create extension package
       run: |
-        # 創建臨時目錄
-        mkdir -p fb-post-url-unhash-extension
-
-        # 複製擴充功能所需檔案
-        cp manifest.json fb-post-url-unhash-extension/
-        cp background.js fb-post-url-unhash-extension/
-        cp popup.html fb-post-url-unhash-extension/
-        cp popup.js fb-post-url-unhash-extension/
-        cp -r icons fb-post-url-unhash-extension/
-        cp README.md fb-post-url-unhash-extension/
-
-        # 創建壓縮檔
-        zip -r fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip fb-post-url-unhash-extension/
+        # 直接打包擴充功能檔案到 ZIP 根目錄（無多餘目錄層級）
+        zip -r fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip \
+          manifest.json \
+          background.js \
+          popup.html \
+          popup.js \
+          icons/ \
+          README.md
 
         # 列出壓縮檔內容以供確認
         echo "壓縮檔內容："
