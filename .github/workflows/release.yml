@@ -20,27 +20,91 @@ jobs:
       id: tag
       run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-    - name: Create extension package
-      run: |
-        # 直接打包擴充功能檔案到 ZIP 根目錄（無多餘目錄層級）
-        zip -r fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip \
-          manifest.json \
-          background.js \
-          popup.html \
-          popup.js \
-          icons/ \
-          README.md
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
 
-        # 列出壓縮檔內容以供確認
-        echo "壓縮檔內容："
-        unzip -l fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip
+    - name: Create extension packages for different browsers
+      run: |
+        # 創建臨時目錄
+        mkdir -p chrome-build firefox-build
+
+        # 複製共用檔案到兩個目錄
+        for dir in chrome-build firefox-build; do
+          cp background.js popup.html popup.js README.md $dir/
+          cp -r icons $dir/
+        done
+
+        # 創建 Chrome/Edge 版本的 manifest (只保留 service_worker)
+        jq 'del(.background.scripts)' manifest.json > chrome-build/manifest.json
+
+        # 創建 Firefox 版本的 manifest (移除 service_worker)
+        jq 'del(.background.service_worker)' manifest.json > firefox-build/manifest.json
+
+        # 打包 Chrome/Edge 版本
+        cd chrome-build
+        zip -r ../fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip *
+        cd ..
+
+        # 打包 Firefox 版本
+        cd firefox-build
+        zip -r ../fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip *
+        cd ..
+
+        # 列出兩個壓縮檔內容以供確認
+        echo "Chrome/Edge 版本內容："
+        unzip -l fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip
+        echo ""
+        echo "Firefox 版本內容："
+        unzip -l fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip
+
+        # 顯示兩個版本的 manifest 差異
+        echo ""
+        echo "Chrome manifest:"
+        unzip -p fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip manifest.json | jq .
+        echo ""
+        echo "Firefox manifest:"
+        unzip -p fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip manifest.json | jq .
 
     - name: Create Release using gh CLI
       run: |
         # 使用 gh CLI 創建 release（草稿模式，自動產生 release notes）
         gh release create ${{ steps.tag.outputs.tag_name }} \
+          --title "FB Post URL Unhash ${{ steps.tag.outputs.tag_name }}" \
+          --notes-file <(cat << 'EOF'
+        ## FB Post URL Unhash - ${{ steps.tag.outputs.tag_name }}
+
+        Facebook 文章網址轉換器 - 將包含 pfbid 的 Facebook 文章 URL 轉換成可提取數字 ID 的格式。
+
+        ### 📦 安裝方式
+        1. 根據您的瀏覽器下載對應的檔案：
+           - **Chrome/Edge**: `fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip` (Manifest V3)
+           - **Firefox**: `fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip` (Manifest V2)
+        2. 解壓縮到任意目錄
+        3. 在瀏覽器中載入解壓縮後的資料夾作為擴充功能
+
+        ### 🦊 Firefox 安裝：
+        - 前往 `about:debugging`
+        - 點擊「This Firefox」
+        - 點擊「Load Temporary Add-on」
+        - 選擇解壓縮資料夾中的 `manifest.json`
+
+        ### 🔍 Chrome/Edge 安裝：
+        - 前往 `chrome://extensions/` 或 `edge://extensions/`
+        - 開啟「開發人員模式」
+        - 點擊「載入未封裝項目」
+        - 選擇解壓縮後的資料夾
+
+        ### ✨ 主要功能
+        - ✅ 跨瀏覽器相容（Chrome、Edge、Firefox）
+        - ✅ 彈出視窗直接顯示嵌入的 Facebook 文章
+        - ✅ 右鍵選單快速開啟嵌入頁面
+        - ✅ 自動偵測 Facebook 文章 URL 格式
+
+        EOF
+        ) \
           --draft \
           --generate-notes \
-          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip
+          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip \
+          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
