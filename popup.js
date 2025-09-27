@@ -1,4 +1,4 @@
-// Popup script for handling the embedded Facebook post
+// Popup script for handling the embedded Facebook post (Manifest V3 compatible)
 document.addEventListener('DOMContentLoaded', async () => {
   const loadingEl = document.getElementById('loading');
   const errorEl = document.getElementById('error');
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     // Get the current active tab
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const currentTab = tabs[0];
     const currentUrl = currentTab.url;
 
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         openButton.textContent = '在新分頁中開啟';
         openButton.style.marginTop = '10px';
         openButton.onclick = () => {
-          browser.tabs.create({ url: embedUrl });
+          chrome.tabs.create({ url: embedUrl });
           window.close();
         };
         errorEl.appendChild(openButton);

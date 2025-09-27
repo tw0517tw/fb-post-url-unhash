@@ -1,31 +1,35 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "FB post url unhash",
-  "version": "1.0",
+  "version": "0.1",
 
   "description": "Convert Facebook post hash URLs to numeric IDs",
 
   "icons": {
-    "48": "icons/icon-64.png"
+    "64": "icons/icon-64.png"
   },
 
   "permissions": [
     "activeTab",
-    "contextMenus",
+    "contextMenus"
+  ],
+
+  "host_permissions": [
     "*://www.facebook.com/*"
   ],
 
-  "content_security_policy": "script-src 'self'; object-src 'self'; frame-src https://www.facebook.com;",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://www.facebook.com;"
+  },
 
-
-  "browser_action": {
+  "action": {
     "default_icon": "icons/icon-64.png",
     "default_title": "轉換 Facebook 文章 ID",
     "default_popup": "popup.html"
   },
 
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   }
 }
