@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "FB post url unhash",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Convert Facebook post hash URLs to numeric IDs",
   "browser_specific_settings": {
     "gecko": {
-      "id": "43d7631c-44a0-447f-ae79-c671a04b07e5"
+      "id": "{43d7631c-44a0-447f-ae79-c671a04b07e5}"
     }
   },
   "icons": {
