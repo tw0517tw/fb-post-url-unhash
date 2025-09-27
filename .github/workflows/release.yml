@@ -1,0 +1,51 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 觸發條件：當推送以 'v' 開頭的 tag 時（如 v1.0.0, v0.1.1）
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # 需要寫入權限來創建 release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get tag name
+      id: tag
+      run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create extension package
+      run: |
+        # 創建臨時目錄
+        mkdir -p fb-post-url-unhash-extension
+
+        # 複製擴充功能所需檔案
+        cp manifest.json fb-post-url-unhash-extension/
+        cp background.js fb-post-url-unhash-extension/
+        cp popup.html fb-post-url-unhash-extension/
+        cp popup.js fb-post-url-unhash-extension/
+        cp -r icons fb-post-url-unhash-extension/
+        cp README.md fb-post-url-unhash-extension/
+
+        # 創建壓縮檔
+        zip -r fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip fb-post-url-unhash-extension/
+
+        # 列出壓縮檔內容以供確認
+        echo "壓縮檔內容："
+        unzip -l fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip
+
+    - name: Create Release using gh CLI
+      run: |
+        # 使用 gh CLI 創建 release（草稿模式，自動產生 release notes）
+        gh release create ${{ steps.tag.outputs.tag_name }} \
+          --draft \
+          --generate-notes \
+          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
