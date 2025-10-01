@@ -1,6 +1,6 @@
-# FB Post URL Unhash - Firefox Extension
+# FB Post URL Unhash
 
-這個 Firefox 擴充功能可以將 Facebook 文章的 hash URL（包含 pfbid）轉換成可以提取數字 ID 的格式。
+這個瀏覽器擴充功能可以將 Facebook 文章的 hash URL（包含 pfbid）轉換成可以提取數字 ID 的格式。
 
 ## 功能
 
@@ -13,13 +13,30 @@
 
 本擴充功能的實作靈感來自於 [這個 stack overflow 的回答](https://stackoverflow.com/a/76897937) 其中所指引到的 [Hacker News 討論內容](https://news.ycombinator.com/item?id=32118095)，在此致謝。
 
-## 安裝方式
+## 下載安裝
+
+### 從擴充功能商店安裝
+
+- **Firefox**：[Firefox Add-ons](https://addons.mozilla.org/zh-TW/firefox/addon/fb-post-url-unhash/)
+- **Edge**：[Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/fb-post-url-unhash/hlflbmnnaeonnbbiojbhkoemlmamolmj)
+
+### 開發者模式安裝（手動載入）
+
+#### Firefox
 
 1. 開啟 Firefox
 2. 前往 `about:debugging`
 3. 點擊「This Firefox」
 4. 點擊「Load Temporary Add-on」
 5. 選擇此專案中的 `manifest.json` 檔案
+
+#### Edge / Chrome
+
+1. 開啟瀏覽器
+2. 前往擴充功能管理頁面
+3. 開啟「開發人員模式」
+4. 點擊「載入未封裝項目」
+5. 選擇此專案的資料夾
 
 ## 使用方式
 
@@ -56,7 +73,7 @@ fb-post-url-unhash/
 
 ## 技術細節
 
-- 使用 Manifest V2（Firefox 相容）
+- 使用 Manifest V3 (支援 Firefox、Chrome、Edge 等瀏覽器)
 - 需要 activeTab 權限以及 contextMenus 權限
 - 彈出視窗使用 iframe 直接嵌入 Facebook 文章，提供即時預覽
 - 右鍵選單僅在符合 Facebook 文章格式的頁面上顯示
@@ -70,7 +87,7 @@ fb-post-url-unhash/
 - 彈出視窗功能需要 Facebook 允許 iframe 嵌入，如果無法載入會提供新分頁開啟的備用選項
 - 需要手動從嵌入的文章中複製發文時間連結來取得數字 ID URL
 - 右鍵選單僅在符合條件的 Facebook 文章頁面上出現
-- 這是一個臨時載入的擴充功能，重啟 Firefox 後需要重新載入
+- 開發者模式載入的擴充功能可能需要在瀏覽器重啟後重新載入
 
 ## 故障排除
 
