@@ -2,6 +2,20 @@
 
 這個 Firefox 擴充功能可以將 Facebook 文章的 hash URL（包含 pfbid）轉換成可以提取數字 ID 的格式。
 
+## 安裝
+
+### 從 Firefox Add-ons 商店安裝（推薦）
+
+前往 [Firefox Add-ons 商店](https://addons.mozilla.org/firefox/addon/fb-post-url-unhash/) 安裝此擴充功能。
+
+### 開發者模式安裝（臨時載入）
+
+1. 開啟 Firefox
+2. 前往 `about:debugging`
+3. 點擊「This Firefox」
+4. 點擊「Load Temporary Add-on」
+5. 選擇此專案中的 `manifest.json` 檔案
+
 ## 功能
 
 - 當瀏覽 Facebook 文章頁面時（格式：`https://www.facebook.com/<account_name>/posts/pfbidXXXXXXX`）
@@ -12,14 +26,6 @@
 ## 靈感來源
 
 本擴充功能的實作靈感來自於 [這個 stack overflow 的回答](https://stackoverflow.com/a/76897937) 其中所指引到的 [Hacker News 討論內容](https://news.ycombinator.com/item?id=32118095)，在此致謝。
-
-## 安裝方式
-
-1. 開啟 Firefox
-2. 前往 `about:debugging`
-3. 點擊「This Firefox」
-4. 點擊「Load Temporary Add-on」
-5. 選擇此專案中的 `manifest.json` 檔案
 
 ## 使用方式
 
@@ -70,7 +76,7 @@ fb-post-url-unhash/
 - 彈出視窗功能需要 Facebook 允許 iframe 嵌入，如果無法載入會提供新分頁開啟的備用選項
 - 需要手動從嵌入的文章中複製發文時間連結來取得數字 ID URL
 - 右鍵選單僅在符合條件的 Facebook 文章頁面上出現
-- 這是一個臨時載入的擴充功能，重啟 Firefox 後需要重新載入
+- 若使用開發者模式臨時載入，重啟 Firefox 後需要重新載入擴充功能
 
 ## 故障排除
 
