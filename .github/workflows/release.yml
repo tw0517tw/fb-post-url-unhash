@@ -37,8 +37,8 @@ jobs:
         # 創建 Chrome/Edge 版本的 manifest (只保留 service_worker)
         jq 'del(.background.scripts)' manifest.json > chrome-build/manifest.json
 
-        # 創建 Firefox 版本的 manifest (移除 service_worker)
-        jq 'del(.background.service_worker)' manifest.json > firefox-build/manifest.json
+        # 創建 Firefox 版本的 manifest (移除 service_worker, 合併 host_permissions 到 permissions)
+        jq 'del(.background.service_worker) | .permissions += .host_permissions | del(.host_permissions)' manifest.json > firefox-build/manifest.json
 
         # 打包 Chrome/Edge 版本
         cd chrome-build
