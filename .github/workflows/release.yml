@@ -34,11 +34,25 @@ jobs:
           cp -r icons $dir/
         done
 
-        # 創建 Chrome/Edge 版本的 manifest (只保留 service_worker)
-        jq 'del(.background.scripts)' manifest.json > chrome-build/manifest.json
+        # Firefox 版本直接複製原始的 manifest (Manifest V2)
+        cp manifest.json firefox-build/manifest.json
 
-        # 創建 Firefox 版本的 manifest (移除 service_worker)
-        jq 'del(.background.service_worker)' manifest.json > firefox-build/manifest.json
+        # 創建 Chrome/Edge 版本的 manifest (Manifest V3)
+        # 1. 修改 manifest_version 為 3
+        # 2. 將 browser_action 改為 action
+        # 3. 將 background.scripts 改為 background.service_worker
+        # 4. 從 permissions 移除 host_permissions,單獨放在 host_permissions 欄位
+        # 5. 修改 content_security_policy 格式為 V3 的物件格式
+        # 6. 移除 browser_specific_settings (Chrome 不需要)
+        jq '.manifest_version = 3 |
+            .action = .browser_action |
+            del(.browser_action) |
+            .background = {service_worker: .background.scripts[0]} |
+            .host_permissions = [.permissions[] | select(startswith("*://"))] |
+            .permissions = [.permissions[] | select(startswith("*://") | not)] |
+            .content_security_policy = {extension_pages: .content_security_policy} |
+            del(.browser_specific_settings)' \
+        manifest.json > chrome-build/manifest.json
 
         # 打包 Chrome/Edge 版本
         cd chrome-build

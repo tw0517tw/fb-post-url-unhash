@@ -1,3 +1,6 @@
+// Polyfill for cross-browser compatibility (Firefox uses 'browser', Chrome uses 'chrome')
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 // 檢查是否為 Facebook 貼文網址的函數
 function isFacebookPostUrl(url) {
   try {
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     // Get the current active tab
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
     const currentTab = tabs[0];
     const currentUrl = currentTab.url;
 
@@ -78,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         openButton.textContent = '在新分頁中開啟';
         openButton.style.marginTop = '10px';
         openButton.onclick = () => {
-          chrome.tabs.create({ url: embedUrl });
+          browserAPI.tabs.create({ url: embedUrl });
           window.close();
         };
         errorEl.appendChild(openButton);
