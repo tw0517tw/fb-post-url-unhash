@@ -19,6 +19,7 @@
 
 - **Firefox**：[Firefox Add-ons](https://addons.mozilla.org/zh-TW/firefox/addon/fb-post-url-unhash/)
 - **Edge**：[Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/fb-post-url-unhash/hlflbmnnaeonnbbiojbhkoemlmamolmj)
+- **Chrome**：[Chrome Web Store](https://chromewebstore.google.com/detail/fb-post-url-unhash/hnekkdbcoefihoajkphlhooedajmemeo)
 
 ### 開發者模式安裝（手動載入）
 
