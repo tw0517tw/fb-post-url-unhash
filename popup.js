@@ -1,6 +1,17 @@
 // Polyfill for cross-browser compatibility (Firefox uses 'browser', Chrome uses 'chrome')
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
+// Initialize i18n
+function initializeI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    const key = element.getAttribute('data-i18n');
+    const message = browserAPI.i18n.getMessage(key);
+    if (message) {
+      element.textContent = message;
+    }
+  });
+}
+
 // 檢查是否為 Facebook 貼文網址的函數
 function isFacebookPostUrl(url) {
   try {
@@ -35,6 +46,9 @@ function isFacebookPostUrl(url) {
 
 // Popup script for handling the embedded Facebook post (Manifest V3 compatible)
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize i18n texts
+  initializeI18n();
+
   const loadingEl = document.getElementById('loading');
   const errorEl = document.getElementById('error');
   const iframeEl = document.getElementById('embed-frame');
@@ -47,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUrl = currentTab.url;
 
     // Display current URL info
-    urlInfoEl.textContent = `目前網址： ${currentUrl}`;
+    urlInfoEl.textContent = `${browserAPI.i18n.getMessage('currentUrl')}${currentUrl}`;
 
     // Check if the current URL is a Facebook post with pfbid
     if (isFacebookPostUrl(currentUrl)) {
@@ -73,12 +87,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Handle iframe load errors
       iframeEl.onerror = () => {
         loadingEl.style.display = 'none';
-        errorEl.innerHTML = '<p>無法載入嵌入的文章。</p><p>您可以嘗試在新分頁中開啟。</p>';
+        errorEl.innerHTML = `<p>${browserAPI.i18n.getMessage('errorCannotLoad')}</p><p>${browserAPI.i18n.getMessage('errorTryNewTab')}</p>`;
         errorEl.style.display = 'block';
 
         // Add a button to open in new tab as fallback
         const openButton = document.createElement('button');
-        openButton.textContent = '在新分頁中開啟';
+        openButton.textContent = browserAPI.i18n.getMessage('openInNewTab');
         openButton.style.marginTop = '10px';
         openButton.onclick = () => {
           browserAPI.tabs.create({ url: embedUrl });
@@ -98,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Error in popup:', error);
     loadingEl.style.display = 'none';
-    errorEl.innerHTML = '<p>載入彈出視窗時發生錯誤。</p>';
+    errorEl.innerHTML = `<p>${browserAPI.i18n.getMessage('errorPopup')}</p>`;
     errorEl.style.display = 'block';
   }
 });
@@ -106,7 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Add copy functionality (optional enhancement)
 document.addEventListener('click', (e) => {
   if (e.target.id === 'url-info') {
-    navigator.clipboard.writeText(e.target.textContent.replace('目前網址： ', ''));
+    const currentUrlText = browserAPI.i18n.getMessage('currentUrl');
+    navigator.clipboard.writeText(e.target.textContent.replace(currentUrlText, ''));
     e.target.style.backgroundColor = '#d4edda';
     setTimeout(() => {
       e.target.style.backgroundColor = '#f0f2f5';

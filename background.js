@@ -5,7 +5,7 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 // Add context menu for right-click functionality
 browserAPI.contextMenus.create({
   id: "fb-post-url-unhash",
-  title: "以嵌入格式重開此文章",
+  title: browserAPI.i18n.getMessage('contextMenuTitle'),
   contexts: ["page"],
   documentUrlPatterns: ["*://www.facebook.com/*/posts/pfbid*"]
 });

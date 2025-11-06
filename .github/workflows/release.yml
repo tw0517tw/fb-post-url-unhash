@@ -31,7 +31,7 @@ jobs:
         # 複製共用檔案到兩個目錄
         for dir in chrome-build firefox-build; do
           cp background.js popup.html popup.js README.md $dir/
-          cp -r icons $dir/
+          cp -r icons _locales $dir/
         done
 
         # Firefox 版本直接複製原始的 manifest (Manifest V2)

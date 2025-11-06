@@ -65,16 +65,16 @@
   </style>
 </head>
 <body>
-  <div class="header">Facebook 文章網址轉換器</div>
+  <div class="header" data-i18n="headerTitle"></div>
   <div id="url-info" class="url-info"></div>
   <div id="instruction" class="instruction">
-    <strong>使用說明：</strong>請在下方嵌入的文章中，右鍵點擊「發文時間」連結，選擇「複製鏈結」即可取得包含數字 ID 的真實網址。
+    <strong data-i18n="instructionTitle"></strong><span data-i18n="instructionText"></span>
   </div>
   <div class="content">
-    <div id="loading" class="loading">載入中...</div>
+    <div id="loading" class="loading" data-i18n="loading"></div>
     <div id="error" class="error" style="display: none;">
-      <p>請先瀏覽包含 pfbid 格式的 Facebook 文章頁面。</p>
-      <p>預期格式：https://www.facebook.com/&lt;使用者名稱&gt;/posts/pfbid...</p>
+      <p data-i18n="errorInvalidUrl"></p>
+      <p data-i18n="errorUrlFormat"></p>
     </div>
     <iframe id="embed-frame" style="display: none;"></iframe>
   </div>

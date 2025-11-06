@@ -1,0 +1,62 @@
+{
+  "extensionName": {
+    "message": "FB post url unhash",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "Convert Facebook post hash URLs to numeric IDs",
+    "description": "Extension description"
+  },
+  "browserActionTitle": {
+    "message": "Convert Facebook Post ID",
+    "description": "Browser action button title"
+  },
+  "headerTitle": {
+    "message": "Facebook Post URL Converter",
+    "description": "Popup header title"
+  },
+  "currentUrl": {
+    "message": "Current URL: ",
+    "description": "Label for current URL display"
+  },
+  "instructionTitle": {
+    "message": "Instructions: ",
+    "description": "Instruction title"
+  },
+  "instructionText": {
+    "message": "In the embedded post below, right-click on the timestamp link and select 'Copy link' to get the real URL with numeric ID.",
+    "description": "Instruction text"
+  },
+  "loading": {
+    "message": "Loading...",
+    "description": "Loading status text"
+  },
+  "errorInvalidUrl": {
+    "message": "Please navigate to a Facebook post page with pfbid format first.",
+    "description": "Error message: invalid URL"
+  },
+  "errorUrlFormat": {
+    "message": "Expected format: https://www.facebook.com/<username>/posts/pfbid...",
+    "description": "Expected URL format description"
+  },
+  "errorCannotLoad": {
+    "message": "Cannot load the embedded post.",
+    "description": "Error message: cannot load embed"
+  },
+  "errorTryNewTab": {
+    "message": "You can try opening it in a new tab.",
+    "description": "Suggestion to open in new tab"
+  },
+  "errorPopup": {
+    "message": "Error loading popup.",
+    "description": "Error message: popup loading error"
+  },
+  "openInNewTab": {
+    "message": "Open in New Tab",
+    "description": "Button text: open in new tab"
+  },
+  "contextMenuTitle": {
+    "message": "Reopen this post in embed format",
+    "description": "Context menu item title"
+  }
+}
