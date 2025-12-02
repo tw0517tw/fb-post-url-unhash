@@ -30,12 +30,15 @@ function isFacebookPostUrl(url) {
       return true;
     }
 
-    // 類型 2: https://www.facebook.com/permalink.php?story_fbid=pfbid...&id=...
-    // 類型 3: https://www.facebook.com/story.php?story_fbid=pfbid...&id=...
+    // 類型 2: https://www.facebook.com/permalink.php?story_fbid=...&id=...
+    // 類型 3: https://www.facebook.com/story.php?story_fbid=...&id=...
+    // 支援 pfbid 開頭的 hash 或純數字的 story_fbid
     if (urlObj.pathname === '/permalink.php' || urlObj.pathname === '/story.php') {
       const storyFbid = urlObj.searchParams.get('story_fbid');
+      const id = urlObj.searchParams.get('id');
 
-      if (storyFbid && storyFbid.startsWith('pfbid')) {
+      // 支援 pfbid 開頭的 hash 或純數字的 story_fbid（需要同時有 id 參數）
+      if (storyFbid && id && (storyFbid.startsWith('pfbid') || /^\d+$/.test(storyFbid))) {
         return true;
       }
     }
