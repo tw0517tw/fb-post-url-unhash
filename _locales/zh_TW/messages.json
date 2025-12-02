@@ -1,0 +1,62 @@
+{
+  "extensionName": {
+    "message": "FB post url unhash",
+    "description": "擴充功能名稱"
+  },
+  "extensionDescription": {
+    "message": "將 Facebook 貼文雜湊網址轉換為數字 ID",
+    "description": "擴充功能描述"
+  },
+  "browserActionTitle": {
+    "message": "轉換 Facebook 文章 ID",
+    "description": "瀏覽器動作按鈕標題"
+  },
+  "headerTitle": {
+    "message": "Facebook 文章網址轉換器",
+    "description": "彈出視窗標題"
+  },
+  "currentUrl": {
+    "message": "目前網址：",
+    "description": "顯示目前網址的標籤"
+  },
+  "instructionTitle": {
+    "message": "使用說明：",
+    "description": "使用說明標題"
+  },
+  "instructionText": {
+    "message": "請在下方嵌入的文章中，右鍵點擊「發文時間」連結，選擇「複製鏈結」即可取得包含數字 ID 的真實網址。",
+    "description": "使用說明內容"
+  },
+  "loading": {
+    "message": "載入中...",
+    "description": "載入狀態文字"
+  },
+  "errorInvalidUrl": {
+    "message": "請先瀏覽包含 pfbid 格式的 Facebook 文章頁面。",
+    "description": "錯誤訊息：無效的網址"
+  },
+  "errorUrlFormat": {
+    "message": "預期格式：https://www.facebook.com/<使用者名稱>/posts/pfbid...",
+    "description": "預期網址格式說明"
+  },
+  "errorCannotLoad": {
+    "message": "無法載入嵌入的文章。",
+    "description": "錯誤訊息：無法載入嵌入內容"
+  },
+  "errorTryNewTab": {
+    "message": "您可以嘗試在新分頁中開啟。",
+    "description": "建議在新分頁開啟"
+  },
+  "errorPopup": {
+    "message": "載入彈出視窗時發生錯誤。",
+    "description": "錯誤訊息：彈出視窗載入錯誤"
+  },
+  "openInNewTab": {
+    "message": "在新分頁中開啟",
+    "description": "按鈕文字：在新分頁開啟"
+  },
+  "contextMenuTitle": {
+    "message": "以嵌入格式重開此文章",
+    "description": "右鍵選單項目標題"
+  }
+}
