@@ -7,7 +7,10 @@ function initializeI18n() {
     const key = element.getAttribute('data-i18n');
     const message = browserAPI.i18n.getMessage(key);
     if (message) {
-      element.textContent = message;
+      // Only set textContent for leaf elements (no children)
+      if (element.children.length === 0) {
+        element.textContent = message;
+      }
     }
   });
 }
