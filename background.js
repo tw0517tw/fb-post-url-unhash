@@ -7,7 +7,11 @@ browserAPI.contextMenus.create({
   id: "fb-post-url-unhash",
   title: browserAPI.i18n.getMessage('contextMenuTitle'),
   contexts: ["page"],
-  documentUrlPatterns: ["*://www.facebook.com/*/posts/pfbid*"]
+  documentUrlPatterns: [
+    "*://www.facebook.com/*/posts/pfbid*",
+    "*://www.facebook.com/story.php?story_fbid=*",
+    "*://www.facebook.com/permalink.php?story_fbid=*"
+  ]
 });
 
 browserAPI.contextMenus.onClicked.addListener((info, tab) => {

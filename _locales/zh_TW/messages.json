@@ -32,11 +32,11 @@
     "description": "載入狀態文字"
   },
   "errorInvalidUrl": {
-    "message": "請先瀏覽包含 pfbid 格式的 Facebook 文章頁面。",
+    "message": "請先瀏覽 Facebook 文章頁面。",
     "description": "錯誤訊息：無效的網址"
   },
   "errorUrlFormat": {
-    "message": "預期格式：https://www.facebook.com/<使用者名稱>/posts/pfbid...",
+    "message": "預期格式：https://www.facebook.com/<使用者名稱>/posts/pfbid... 或 https://www.facebook.com/story.php?story_fbid=...",
     "description": "預期網址格式說明"
   },
   "errorCannotLoad": {

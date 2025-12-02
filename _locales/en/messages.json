@@ -32,11 +32,11 @@
     "description": "Loading status text"
   },
   "errorInvalidUrl": {
-    "message": "Please navigate to a Facebook post page with pfbid format first.",
+    "message": "Please navigate to a Facebook post page first.",
     "description": "Error message: invalid URL"
   },
   "errorUrlFormat": {
-    "message": "Expected format: https://www.facebook.com/<username>/posts/pfbid...",
+    "message": "Expected format: https://www.facebook.com/<username>/posts/pfbid... or https://www.facebook.com/story.php?story_fbid=...",
     "description": "Expected URL format description"
   },
   "errorCannotLoad": {
