@@ -4,21 +4,48 @@ on:
   push:
     tags:
       - 'v*' # 觸發條件：當推送以 'v' 開頭的 tag 時（如 v1.0.0, v0.1.1）
+  workflow_dispatch: # 允許手動觸發
+    inputs:
+      tag_name:
+        description: '要發佈的 tag 名稱 (例如: v0.3.4)'
+        required: true
+        type: string
+      publish_chrome:
+        description: '發佈到 Chrome Web Store'
+        required: false
+        type: boolean
+        default: false
+      publish_firefox:
+        description: '發佈到 Firefox Add-ons'
+        required: false
+        type: boolean
+        default: false
+      publish_edge:
+        description: '發佈到 Edge Add-ons'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write # 需要寫入權限來創建 release
+    outputs:
+      tag_name: ${{ steps.tag.outputs.tag_name }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Get tag name
       id: tag
-      run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "tag_name=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.tag.outputs.tag_name }}
 
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
@@ -79,20 +106,55 @@ jobs:
         echo "Firefox manifest:"
         unzip -p fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip manifest.json | jq .
 
+    - name: Upload Chrome package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chrome-extension-${{ steps.tag.outputs.tag_name }}
+        path: fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip
+        retention-days: 7  # Keep artifacts for 7 days
+
+    - name: Upload Firefox package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: firefox-extension-${{ steps.tag.outputs.tag_name }}
+        path: fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip
+        retention-days: 7  # Keep artifacts for 7 days
+
+  # 發佈到 GitHub Release
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有在 tag push 時才自動創建 GitHub Release
+    if: ${{ github.event_name == 'push' }}
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download Chrome artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: chrome-extension-${{ needs.build.outputs.tag_name }}
+
+    - name: Download Firefox artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: firefox-extension-${{ needs.build.outputs.tag_name }}
+
     - name: Create Release using gh CLI
       run: |
         # 使用 gh CLI 創建 release（草稿模式，自動產生 release notes）
-        gh release create ${{ steps.tag.outputs.tag_name }} \
-          --title "FB Post URL Unhash ${{ steps.tag.outputs.tag_name }}" \
+        gh release create ${{ needs.build.outputs.tag_name }} \
+          --repo ${{ github.repository }} \
+          --title "FB Post URL Unhash ${{ needs.build.outputs.tag_name }}" \
           --notes-file <(cat << 'EOF'
-        ## FB Post URL Unhash - ${{ steps.tag.outputs.tag_name }}
+        ## FB Post URL Unhash - ${{ needs.build.outputs.tag_name }}
 
         Facebook 文章網址轉換器 - 將包含 pfbid 的 Facebook 文章 URL 轉換成可提取數字 ID 的格式。
 
         ### 📦 安裝方式
         1. 根據您的瀏覽器下載對應的檔案：
-           - **Chrome/Edge**: `fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip` (Manifest V3)
-           - **Firefox**: `fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip` (Manifest V2)
+           - **Chrome/Edge**: `fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-chrome.zip` (Manifest V3)
+           - **Firefox**: `fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-firefox.zip` (Manifest V2)
         2. 解壓縮到任意目錄
         3. 在瀏覽器中載入解壓縮後的資料夾作為擴充功能
 
@@ -118,7 +180,212 @@ jobs:
         ) \
           --draft \
           --generate-notes \
-          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-chrome.zip \
-          fb-post-url-unhash-${{ steps.tag.outputs.tag_name }}-firefox.zip
+          fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-chrome.zip \
+          fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-firefox.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 發佈到 Chrome Web Store
+  publish-chrome:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有在手動觸發且勾選發佈到 Chrome 時才執行
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_chrome }}
+
+    steps:
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Download Chrome artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: chrome-extension-${{ needs.build.outputs.tag_name }}
+
+    - name: Get Access Token and Upload to Chrome Web Store
+      run: |
+        # 使用 refresh token 取得 access token
+        TOKEN_RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "client_id=${{ secrets.CHROME_CLIENT_ID }}" \
+          -d "client_secret=${{ secrets.CHROME_CLIENT_SECRET }}" \
+          -d "refresh_token=${{ secrets.CHROME_REFRESH_TOKEN }}" \
+          -d "grant_type=refresh_token")
+
+        ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token')
+
+        if [ "$ACCESS_TOKEN" == "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+          echo "Failed to get access token"
+          echo "$TOKEN_RESPONSE"
+          exit 1
+        fi
+
+        echo "Successfully obtained access token"
+
+        # 上傳擴充功能套件
+        UPLOAD_RESPONSE=$(curl -s -X PUT \
+          "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${{ secrets.CHROME_EXTENSION_ID }}" \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "x-goog-api-version: 2" \
+          -H "Content-Type: application/zip" \
+          --data-binary @fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-chrome.zip)
+
+        echo "Upload response: $UPLOAD_RESPONSE"
+
+        UPLOAD_STATE=$(echo "$UPLOAD_RESPONSE" | jq -r '.uploadState')
+
+        if [ "$UPLOAD_STATE" != "SUCCESS" ]; then
+          echo "Failed to upload package"
+          echo "$UPLOAD_RESPONSE" | jq .
+          exit 1
+        fi
+
+        echo "Package uploaded successfully"
+
+        # 發佈擴充功能
+        PUBLISH_RESPONSE=$(curl -s -X POST \
+          "https://www.googleapis.com/chromewebstore/v1.1/items/${{ secrets.CHROME_EXTENSION_ID }}/publish" \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "x-goog-api-version: 2" \
+          -H "Content-Length: 0")
+
+        echo "Publish response: $PUBLISH_RESPONSE"
+
+        PUBLISH_STATUS=$(echo "$PUBLISH_RESPONSE" | jq -r '.status[0]')
+
+        if [ "$PUBLISH_STATUS" != "OK" ] && [ "$PUBLISH_STATUS" != "PENDING" ]; then
+          echo "Failed to publish extension"
+          echo "$PUBLISH_RESPONSE" | jq .
+          exit 1
+        fi
+
+        echo "Extension published successfully (status: $PUBLISH_STATUS)"
+
+  # 發佈到 Firefox Add-ons (AMO)
+  publish-firefox:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有在手動觸發且勾選發佈到 Firefox 時才執行
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_firefox }}
+
+    steps:
+    - name: Download Firefox artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: firefox-extension-${{ needs.build.outputs.tag_name }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install web-ext
+      run: npm install -g web-ext
+
+    - name: Upload to Firefox Add-ons
+      run: |
+        # 解壓縮以便使用 web-ext 簽署並提交
+        mkdir -p extension
+        unzip fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-firefox.zip -d extension
+
+        # 使用 web-ext sign 提交到 AMO
+        # --channel=listed 表示發佈到公開商店
+        cd extension
+        web-ext sign \
+          --channel=listed \
+          --api-key=${{ secrets.FIREFOX_JWT_ISSUER }} \
+          --api-secret=${{ secrets.FIREFOX_JWT_SECRET }}
+
+  # 發佈到 Microsoft Edge Add-ons
+  publish-edge:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有在手動觸發且勾選發佈到 Edge 時才執行
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_edge }}
+
+    steps:
+    - name: Download Chrome artifact (Edge 使用相同的 Manifest V3 包)
+      uses: actions/download-artifact@v4
+      with:
+        name: chrome-extension-${{ needs.build.outputs.tag_name }}
+
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Get Access Token and Upload to Edge Add-ons
+      run: |
+        # 取得 Access Token
+        ACCESS_TOKEN=$(curl -s -X POST "${{ secrets.EDGE_ACCESS_TOKEN_URL }}" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "client_id=${{ secrets.EDGE_CLIENT_ID }}" \
+          -d "scope=https://api.addons.microsoftedge.microsoft.com/.default" \
+          -d "client_secret=${{ secrets.EDGE_CLIENT_SECRET }}" \
+          -d "grant_type=client_credentials" | jq -r '.access_token')
+
+        if [ "$ACCESS_TOKEN" == "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+          echo "Failed to get access token"
+          exit 1
+        fi
+
+        echo "Successfully obtained access token"
+
+        # 上傳新版本
+        UPLOAD_RESPONSE=$(curl -s -X POST \
+          "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package" \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "Content-Type: application/zip" \
+          --data-binary @fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-chrome.zip)
+
+        echo "Upload response status: $(echo "$UPLOAD_RESPONSE" | jq -r '.status // "unknown"')"
+
+        OPERATION_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '.id // empty')
+
+        if [ -z "$OPERATION_ID" ]; then
+          echo "Failed to upload package"
+          exit 1
+        fi
+
+        echo "Package uploaded, operation ID: $OPERATION_ID"
+
+        # 等待上傳處理完成
+        for i in {1..30}; do
+          sleep 10
+          STATUS_RESPONSE=$(curl -s -X GET \
+            "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package/operations/$OPERATION_ID" \
+            -H "Authorization: Bearer $ACCESS_TOKEN")
+
+          STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status')
+          echo "Upload status: $STATUS"
+
+          if [ "$STATUS" == "Succeeded" ]; then
+            echo "Package upload succeeded"
+            break
+          elif [ "$STATUS" == "Failed" ]; then
+            echo "Package upload failed"
+            echo "Error details: $(echo "$STATUS_RESPONSE" | jq -r '.message // .error // "Unknown error"')"
+            exit 1
+          fi
+        done
+
+        # 檢查是否超時
+        if [ "$STATUS" != "Succeeded" ]; then
+          echo "Timeout: Package upload did not complete within 5 minutes"
+          exit 1
+        fi
+
+        # 發佈提交
+        PUBLISH_RESPONSE=$(curl -s -X POST \
+          "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions" \
+          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{}')
+
+        echo "Publish response status: $(echo "$PUBLISH_RESPONSE" | jq -r '.status // "unknown"')"
+
+        PUBLISH_ID=$(echo "$PUBLISH_RESPONSE" | jq -r '.id // empty')
+
+        if [ -z "$PUBLISH_ID" ]; then
+          echo "Failed to create submission"
+          exit 1
+        fi
+
+        echo "Submission created successfully, ID: $PUBLISH_ID"
