@@ -190,7 +190,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     # 只有在手動觸發且勾選發佈到 Chrome 時才執行
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_chrome }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_chrome == 'true' }}
 
     steps:
     - name: Install jq
@@ -265,7 +265,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     # 只有在手動觸發且勾選發佈到 Firefox 時才執行
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_firefox }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_firefox == 'true' }}
 
     steps:
     - name: Download Firefox artifact
@@ -300,7 +300,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     # 只有在手動觸發且勾選發佈到 Edge 時才執行
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_edge }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_edge == 'true' }}
 
     steps:
     - name: Download Chrome artifact (Edge 使用相同的 Manifest V3 包)
