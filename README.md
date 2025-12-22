@@ -67,7 +67,6 @@ fb-post-url-unhash/
 ├── popup.html         # 彈出視窗的 HTML 介面
 ├── popup.js          # 彈出視窗的邏輯腳本
 ├── icons/
-│   ├── border-48.png # 擴充功能圖示
 │   └── icon-64.png   # 擴充功能圖示
 └── README.md         # 此說明檔案
 ```
