@@ -43,6 +43,17 @@ function isFacebookPostUrl(url) {
       }
     }
 
+    // 類型 4: https://www.facebook.com/photo.php?fbid=...&set=...
+    if (urlObj.pathname === '/photo.php') {
+      const fbid = urlObj.searchParams.get('fbid');
+      const set = urlObj.searchParams.get('set');
+
+      // 需要同時有 fbid 和 set 參數
+      if (fbid && set) {
+        return true;
+      }
+    }
+
     return false;
   } catch (error) {
     // 如果 URL 解析失敗，返回 false
