@@ -73,6 +73,10 @@ fb-post-url-unhash/
 └── README.md         # 此說明檔案
 ```
 
+## 發布流程
+
+請參考 [RELEASE.md](./RELEASE.md)。
+
 ## 技術細節
 
 - 使用 Manifest V3 (支援 Firefox、Chrome、Edge 等瀏覽器)
