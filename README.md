@@ -5,13 +5,15 @@
 ## 功能
 
 - 當瀏覽 Facebook 文章頁面時（格式：`https://www.facebook.com/<account_name>/posts/pfbidXXXXXXX`）
-- 點擊擴充功能按鈕開啟彈出視窗，直接在視窗內顯示嵌入的 Facebook 文章
+- 點擊擴充功能按鈕開啟彈出視窗，會**自動**透過 Facebook Graph API 嘗試解析出數字 ID，成功就直接顯示還原後的完整網址，不需要任何帳號或 access token
+- 如果自動解析失敗，會自動退回原本的方式：直接在視窗內顯示嵌入的 Facebook 文章，從中手動複製包含數字 ID 的真實 URL
 - 或使用右鍵選單，在新分頁中開啟 Facebook 嵌入頁面
-- 從嵌入的文章中可以手動複製包含數字 ID 的真實 URL
 
 ## 靈感來源
 
 本擴充功能的實作靈感來自於 [這個 stack overflow 的回答](https://stackoverflow.com/a/76897937) 其中所指引到的 [Hacker News 討論內容](https://news.ycombinator.com/item?id=32118095)，在此致謝。
+
+另外，自動解析的部分利用了 Facebook Graph API 的一個特性：呼叫 `https://graph.facebook.com/posts/{pfbid}` 時，Facebook 會先把 pfbid 解析成內部的數字 ID，接著才進行權限檢查；如果沒有權限存取，回傳的錯誤訊息裡仍然會包含這個已經解析出來的數字 ID。因為 ID 解析發生在權限檢查「之前」，所以整個過程完全不需要 access token。
 
 ## 下載安裝
 
@@ -45,9 +47,9 @@
 
 1. 開啟任何 Facebook 單一文章頁面（URL 包含 pfbid）
 2. 點擊瀏覽器工具列上的擴充功能按鈕
-3. 彈出視窗會顯示目前網址並載入嵌入版本的文章
-4. 在嵌入的文章中，右鍵點擊「發文時間」連結
-5. 選擇「複製鏈結」即可取得包含數字 ID 的真實網址
+3. 彈出視窗會顯示目前網址，並自動嘗試透過 Graph API 解析
+4. 解析成功時，會直接顯示數字 ID 與還原後的完整網址，點擊「複製網址」即可複製
+5. 若解析失敗，會自動改為載入嵌入版本的文章：在嵌入的文章中右鍵點擊「發文時間」連結，選擇「複製鏈結」即可取得包含數字 ID 的真實網址
 6. 點擊網址區域可以複製目前頁面網址
 
 ### 方法二：使用右鍵選單
@@ -74,8 +76,8 @@ fb-post-url-unhash/
 ## 技術細節
 
 - 使用 Manifest V3 (支援 Firefox、Chrome、Edge 等瀏覽器)
-- 需要 activeTab 權限以及 contextMenus 權限
-- 彈出視窗使用 iframe 直接嵌入 Facebook 文章，提供即時預覽
+- 需要 activeTab 權限、contextMenus 權限，以及呼叫 Graph API 所需的 graph.facebook.com host 權限
+- 彈出視窗會先呼叫 `https://graph.facebook.com/posts/{pfbid}` 自動解析數字 ID，失敗時才 fallback 用 iframe 直接嵌入 Facebook 文章
 - 右鍵選單僅在符合 Facebook 文章格式的頁面上顯示
 - 新分頁會在目前分頁的下一個位置開啟，改善使用體驗
 - 使用 encodeURIComponent 正確編碼 URL 參數
@@ -84,13 +86,14 @@ fb-post-url-unhash/
 ## 注意事項
 
 - 此擴充功能僅在包含 `pfbid` 的 Facebook 文章 URL 上工作
-- 彈出視窗功能需要 Facebook 允許 iframe 嵌入，如果無法載入會提供新分頁開啟的備用選項
-- 需要手動從嵌入的文章中複製發文時間連結來取得數字 ID URL
-- 右鍵選單僅在符合條件的 Facebook 文章頁面上出現
+- Graph API 自動解析不需要任何帳號或 access token，但仍需要該 pfbid 對應的貼文是 Facebook 可以正常解析的物件；解析失敗時會自動 fallback
+- 彈出視窗的 fallback 流程需要 Facebook 允許 iframe 嵌入，如果無法載入會提供新分頁開啟的備用選項
+- 右鍵選單僅在符合條件的 Facebook 文章頁面上出現，且維持原本的嵌入流程（不會自動呼叫 Graph API）
 - 開發者模式載入的擴充功能可能需要在瀏覽器重啟後重新載入
 
 ## 故障排除
 
+- 如果彈出視窗顯示「Graph API 解析失敗，已改用嵌入版本顯示」，代表自動解析失敗，請改用嵌入文章中「複製鏈結」的手動方式
 - 如果彈出視窗中的嵌入文章無法載入，請使用「在新分頁中開啟」按鈕
 - 如果右鍵選單沒有出現，請確認目前頁面是 Facebook 文章且 URL 包含 pfbid
 - 點擊彈出視窗中的網址區域可以複製目前頁面的網址
