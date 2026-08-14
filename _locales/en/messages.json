@@ -58,5 +58,29 @@
   "contextMenuTitle": {
     "message": "Reopen this post in embed format",
     "description": "Context menu item title"
+  },
+  "graphResolving": {
+    "message": "Resolving via Graph API...",
+    "description": "Graph API resolving status text"
+  },
+  "graphResolvedNumericId": {
+    "message": "Numeric ID:",
+    "description": "Graph API result: numeric ID label"
+  },
+  "graphResolvedUrl": {
+    "message": "Resolved URL:",
+    "description": "Graph API result: resolved URL label"
+  },
+  "graphCopyButton": {
+    "message": "Copy URL",
+    "description": "Button text: copy resolved URL"
+  },
+  "graphCopiedMessage": {
+    "message": "Copied!",
+    "description": "Copy success message"
+  },
+  "graphFallbackNotice": {
+    "message": "Graph API resolution failed, falling back to embed method.",
+    "description": "Notice shown when Graph API resolution fails and falls back to iframe"
   }
 }

@@ -62,6 +62,42 @@
       border-radius: 4px;
       display: none;
     }
+
+    .graph-result {
+      padding: 15px;
+      font-size: 12px;
+      color: #333;
+      display: none;
+    }
+
+    .graph-result p {
+      margin: 4px 0 12px 0;
+    }
+
+    .graph-result strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .graph-result a {
+      word-break: break-all;
+      color: #1877f2;
+    }
+
+    .graph-result button {
+      margin-top: 4px;
+    }
+
+    .graph-fallback-notice {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 8px;
+      margin: 5px;
+      font-size: 11px;
+      color: #856404;
+      border-radius: 4px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -70,11 +106,19 @@
   <div id="instruction" class="instruction">
     <strong data-i18n="instructionTitle"></strong><span data-i18n="instructionText"></span>
   </div>
+  <div id="graph-fallback-notice" class="graph-fallback-notice" data-i18n="graphFallbackNotice"></div>
   <div class="content">
     <div id="loading" class="loading" data-i18n="loading"></div>
     <div id="error" class="error" style="display: none;">
       <p data-i18n="errorInvalidUrl"></p>
       <p data-i18n="errorUrlFormat"></p>
+    </div>
+    <div id="graph-result" class="graph-result">
+      <strong data-i18n="graphResolvedNumericId"></strong>
+      <p id="graph-numeric-id"></p>
+      <strong data-i18n="graphResolvedUrl"></strong>
+      <p><a id="graph-resolved-url" href="#" target="_blank" rel="noopener"></a></p>
+      <button id="graph-copy-button" data-i18n="graphCopyButton"></button>
     </div>
     <iframe id="embed-frame" style="display: none;"></iframe>
   </div>

@@ -58,5 +58,29 @@
   "contextMenuTitle": {
     "message": "以嵌入格式重開此文章",
     "description": "右鍵選單項目標題"
+  },
+  "graphResolving": {
+    "message": "正在透過 Graph API 解析中...",
+    "description": "Graph API 解析中狀態文字"
+  },
+  "graphResolvedNumericId": {
+    "message": "數字 ID：",
+    "description": "Graph API 解析結果：數字 ID 標籤"
+  },
+  "graphResolvedUrl": {
+    "message": "還原網址：",
+    "description": "Graph API 解析結果：還原網址標籤"
+  },
+  "graphCopyButton": {
+    "message": "複製網址",
+    "description": "複製還原網址按鈕文字"
+  },
+  "graphCopiedMessage": {
+    "message": "已複製！",
+    "description": "複製成功提示文字"
+  },
+  "graphFallbackNotice": {
+    "message": "Graph API 解析失敗，已改用嵌入版本顯示。",
+    "description": "Graph API 解析失敗改用 iframe 的提示文字"
   }
 }

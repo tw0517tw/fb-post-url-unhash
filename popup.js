@@ -61,6 +61,67 @@ function isFacebookPostUrl(url) {
   }
 }
 
+// 從網址中找出 pfbid，並提供一個組出還原後網址的函式
+function extractPfbidInfo(url) {
+  try {
+    const urlObj = new URL(url);
+
+    if (urlObj.hostname !== 'www.facebook.com') {
+      return null;
+    }
+
+    // 類型 1: https://www.facebook.com/{username}/posts/pfbid...
+    const pathMatch = urlObj.pathname.match(/^\/[^\/]+\/posts\/(pfbid[^\/?]+)/);
+    if (pathMatch) {
+      const pfbid = pathMatch[1];
+      return {
+        pfbid,
+        buildResolvedUrl: (numericId) => {
+          const resolved = new URL(url);
+          resolved.pathname = resolved.pathname.replace(pfbid, numericId);
+          return resolved.toString();
+        }
+      };
+    }
+
+    // 類型 2/3: story_fbid=pfbid...
+    if (urlObj.pathname === '/permalink.php' || urlObj.pathname === '/story.php') {
+      const storyFbid = urlObj.searchParams.get('story_fbid');
+      if (storyFbid && storyFbid.startsWith('pfbid')) {
+        return {
+          pfbid: storyFbid,
+          buildResolvedUrl: (numericId) => {
+            const resolved = new URL(url);
+            resolved.searchParams.set('story_fbid', numericId);
+            return resolved.toString();
+          }
+        };
+      }
+    }
+
+    // 類型 4 (photo.php) 或純數字 story_fbid：沒有 pfbid 需要還原
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// 呼叫 Graph API，從錯誤訊息中取得數字 ID（不需要 access token）
+async function resolvePfbidViaGraphApi(pfbid) {
+  const apiUrl = `https://graph.facebook.com/posts/${encodeURIComponent(pfbid)}`;
+  const response = await fetch(apiUrl);
+  const data = await response.json();
+  const message = data && data.error && data.error.message;
+  if (!message) {
+    throw new Error('Graph API did not return a parseable error message');
+  }
+  const match = message.match(/\d{10,}/);
+  if (!match) {
+    throw new Error('Could not find a numeric ID in the Graph API error message');
+  }
+  return match[0];
+}
+
 // Popup script for handling the embedded Facebook post (Manifest V3 compatible)
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize i18n texts
@@ -70,6 +131,71 @@ document.addEventListener('DOMContentLoaded', async () => {
   const errorEl = document.getElementById('error');
   const iframeEl = document.getElementById('embed-frame');
   const urlInfoEl = document.getElementById('url-info');
+  const graphResultEl = document.getElementById('graph-result');
+  const graphFallbackNoticeEl = document.getElementById('graph-fallback-notice');
+
+  // 載入嵌入版本的文章（原本的手動流程）
+  function loadIframeMethod(currentUrl) {
+    const encodedUrl = encodeURIComponent(currentUrl);
+    const embedUrl = `https://www.facebook.com/plugins/post.php?href=${encodedUrl}`;
+
+    loadingEl.style.display = 'block';
+    loadingEl.textContent = browserAPI.i18n.getMessage('loading');
+
+    // Load the embedded post
+    iframeEl.src = embedUrl;
+
+    // Show iframe and hide loading when loaded
+    iframeEl.onload = () => {
+      loadingEl.style.display = 'none';
+      iframeEl.style.display = 'block';
+
+      // Show instruction message
+      const instructionEl = document.getElementById('instruction');
+      if (instructionEl) {
+        instructionEl.style.display = 'block';
+      }
+    };
+
+    // Handle iframe load errors
+    iframeEl.onerror = () => {
+      loadingEl.style.display = 'none';
+      errorEl.innerHTML = `<p>${browserAPI.i18n.getMessage('errorCannotLoad')}</p><p>${browserAPI.i18n.getMessage('errorTryNewTab')}</p>`;
+      errorEl.style.display = 'block';
+
+      // Add a button to open in new tab as fallback
+      const openButton = document.createElement('button');
+      openButton.textContent = browserAPI.i18n.getMessage('openInNewTab');
+      openButton.style.marginTop = '10px';
+      openButton.onclick = () => {
+        browserAPI.tabs.create({ url: embedUrl });
+        window.close();
+      };
+      errorEl.appendChild(openButton);
+    };
+  }
+
+  // 顯示 Graph API 解析出來的結果
+  function showGraphResult(numericId, resolvedUrl) {
+    loadingEl.style.display = 'none';
+
+    document.getElementById('graph-numeric-id').textContent = numericId;
+    const resolvedUrlEl = document.getElementById('graph-resolved-url');
+    resolvedUrlEl.textContent = resolvedUrl;
+    resolvedUrlEl.href = resolvedUrl;
+
+    graphResultEl.style.display = 'block';
+
+    document.getElementById('graph-copy-button').onclick = (e) => {
+      navigator.clipboard.writeText(resolvedUrl);
+      const button = e.target;
+      const originalText = button.textContent;
+      button.textContent = browserAPI.i18n.getMessage('graphCopiedMessage');
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 1000);
+    };
+  }
 
   try {
     // Get the current active tab
@@ -82,41 +208,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check if the current URL is a Facebook post with pfbid
     if (isFacebookPostUrl(currentUrl)) {
-      // Create the embed URL
-      const encodedUrl = encodeURIComponent(currentUrl);
-      const embedUrl = `https://www.facebook.com/plugins/post.php?href=${encodedUrl}`;
+      const pfbidInfo = extractPfbidInfo(currentUrl);
 
-      // Load the embedded post
-      iframeEl.src = embedUrl;
+      if (pfbidInfo) {
+        loadingEl.style.display = 'block';
+        loadingEl.textContent = browserAPI.i18n.getMessage('graphResolving');
 
-      // Show iframe and hide loading when loaded
-      iframeEl.onload = () => {
-        loadingEl.style.display = 'none';
-        iframeEl.style.display = 'block';
-
-        // Show instruction message
-        const instructionEl = document.getElementById('instruction');
-        if (instructionEl) {
-          instructionEl.style.display = 'block';
+        try {
+          const numericId = await resolvePfbidViaGraphApi(pfbidInfo.pfbid);
+          const resolvedUrl = pfbidInfo.buildResolvedUrl(numericId);
+          showGraphResult(numericId, resolvedUrl);
+        } catch (graphError) {
+          console.error('Graph API resolve failed:', graphError);
+          graphFallbackNoticeEl.style.display = 'block';
+          loadIframeMethod(currentUrl);
         }
-      };
-
-      // Handle iframe load errors
-      iframeEl.onerror = () => {
-        loadingEl.style.display = 'none';
-        errorEl.innerHTML = `<p>${browserAPI.i18n.getMessage('errorCannotLoad')}</p><p>${browserAPI.i18n.getMessage('errorTryNewTab')}</p>`;
-        errorEl.style.display = 'block';
-
-        // Add a button to open in new tab as fallback
-        const openButton = document.createElement('button');
-        openButton.textContent = browserAPI.i18n.getMessage('openInNewTab');
-        openButton.style.marginTop = '10px';
-        openButton.onclick = () => {
-          browserAPI.tabs.create({ url: embedUrl });
-          window.close();
-        };
-        errorEl.appendChild(openButton);
-      };
+      } else {
+        loadIframeMethod(currentUrl);
+      }
 
     } else {
       // Show error for invalid URL
