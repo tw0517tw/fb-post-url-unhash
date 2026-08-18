@@ -326,7 +326,7 @@ jobs:
 
         echo "$UPLOAD_HEADERS"
 
-        OPERATION_ID=$(echo "$UPLOAD_HEADERS" | grep -i '^Location:' | sed -E 's#.*/operations/([^/[:space:]]+).*#\1#')
+        OPERATION_ID=$(echo "$UPLOAD_HEADERS" | grep -i '^Location:' | sed -E 's/^[Ll]ocation:[[:space:]]*//' | tr -d '\r' | sed -E 's#.*/##')
 
         if [ -z "$OPERATION_ID" ]; then
           echo "Failed to upload package (no operation ID in response)"
@@ -372,7 +372,7 @@ jobs:
 
         echo "$PUBLISH_HEADERS"
 
-        PUBLISH_OPERATION_ID=$(echo "$PUBLISH_HEADERS" | grep -i '^Location:' | sed -E 's#.*/operations/([^/[:space:]]+).*#\1#')
+        PUBLISH_OPERATION_ID=$(echo "$PUBLISH_HEADERS" | grep -i '^Location:' | sed -E 's/^[Ll]ocation:[[:space:]]*//' | tr -d '\r' | sed -E 's#.*/##')
 
         if [ -z "$PUBLISH_OPERATION_ID" ]; then
           echo "Failed to create submission (no operation ID in response)"
