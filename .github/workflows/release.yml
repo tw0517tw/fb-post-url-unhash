@@ -311,36 +311,25 @@ jobs:
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Get Access Token and Upload to Edge Add-ons
+    - name: Upload and publish to Edge Add-ons (API v1.1)
       run: |
-        # 取得 Access Token
-        ACCESS_TOKEN=$(curl -s -X POST "${{ secrets.EDGE_ACCESS_TOKEN_URL }}" \
-          -H "Content-Type: application/x-www-form-urlencoded" \
-          -d "client_id=${{ secrets.EDGE_CLIENT_ID }}" \
-          -d "scope=https://api.addons.microsoftedge.microsoft.com/.default" \
-          -d "client_secret=${{ secrets.EDGE_CLIENT_SECRET }}" \
-          -d "grant_type=client_credentials" | jq -r '.access_token')
+        AUTH_HEADER="Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}"
+        CLIENT_HEADER="X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}"
 
-        if [ "$ACCESS_TOKEN" == "null" ] || [ -z "$ACCESS_TOKEN" ]; then
-          echo "Failed to get access token"
-          exit 1
-        fi
-
-        echo "Successfully obtained access token"
-
-        # 上傳新版本
-        UPLOAD_RESPONSE=$(curl -s -X POST \
+        # 上傳新版本（回應是 202 + Location header 帶 operation ID，不是 JSON body）
+        UPLOAD_HEADERS=$(curl -s -D - -o /dev/null -X POST \
           "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package" \
-          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "$AUTH_HEADER" \
+          -H "$CLIENT_HEADER" \
           -H "Content-Type: application/zip" \
           --data-binary @fb-post-url-unhash-${{ needs.build.outputs.tag_name }}-chrome.zip)
 
-        echo "Upload response status: $(echo "$UPLOAD_RESPONSE" | jq -r '.status // "unknown"')"
+        echo "$UPLOAD_HEADERS"
 
-        OPERATION_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '.id // empty')
+        OPERATION_ID=$(echo "$UPLOAD_HEADERS" | grep -i '^Location:' | sed -E 's#.*/operations/([^/[:space:]]+).*#\1#')
 
         if [ -z "$OPERATION_ID" ]; then
-          echo "Failed to upload package"
+          echo "Failed to upload package (no operation ID in response)"
           exit 1
         fi
 
@@ -351,7 +340,8 @@ jobs:
           sleep 10
           STATUS_RESPONSE=$(curl -s -X GET \
             "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package/operations/$OPERATION_ID" \
-            -H "Authorization: Bearer $ACCESS_TOKEN")
+            -H "$AUTH_HEADER" \
+            -H "$CLIENT_HEADER")
 
           STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status')
           echo "Upload status: $STATUS"
@@ -373,19 +363,20 @@ jobs:
         fi
 
         # 發佈提交
-        PUBLISH_RESPONSE=$(curl -s -X POST \
+        PUBLISH_HEADERS=$(curl -s -D - -o /dev/null -X POST \
           "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions" \
-          -H "Authorization: Bearer $ACCESS_TOKEN" \
+          -H "$AUTH_HEADER" \
+          -H "$CLIENT_HEADER" \
           -H "Content-Type: application/json" \
-          -d '{}')
+          -d '{"notes":"Automated release via GitHub Actions"}')
 
-        echo "Publish response status: $(echo "$PUBLISH_RESPONSE" | jq -r '.status // "unknown"')"
+        echo "$PUBLISH_HEADERS"
 
-        PUBLISH_ID=$(echo "$PUBLISH_RESPONSE" | jq -r '.id // empty')
+        PUBLISH_OPERATION_ID=$(echo "$PUBLISH_HEADERS" | grep -i '^Location:' | sed -E 's#.*/operations/([^/[:space:]]+).*#\1#')
 
-        if [ -z "$PUBLISH_ID" ]; then
-          echo "Failed to create submission"
+        if [ -z "$PUBLISH_OPERATION_ID" ]; then
+          echo "Failed to create submission (no operation ID in response)"
           exit 1
         fi
 
-        echo "Submission created successfully, ID: $PUBLISH_ID"
+        echo "Submission created successfully, operation ID: $PUBLISH_OPERATION_ID"
