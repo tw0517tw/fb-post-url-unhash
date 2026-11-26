@@ -10,7 +10,11 @@
     }
   },
   "icons": {
-    "64": "icons/icon-64.png"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "128": "icons/icon-128.png"
   },
   "permissions": [
     "activeTab",
@@ -20,7 +24,11 @@
   ],
   "content_security_policy": "script-src 'self'; object-src 'self'; frame-src https://www.facebook.com; connect-src https://graph.facebook.com;",
   "browser_action": {
-    "default_icon": "icons/icon-64.png",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "64": "icons/icon-64.png"
+    },
     "default_title": "__MSG_browserActionTitle__",
     "default_popup": "popup.html"
   },
