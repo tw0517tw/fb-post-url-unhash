@@ -2,6 +2,12 @@
 
 這個瀏覽器擴充功能可以將 Facebook 文章的 hash URL（包含 pfbid）轉換成可以提取數字 ID 的格式。
 
+> **免責聲明 / Disclaimer**
+>
+> Facebook 是 Meta Platforms, Inc. 的產品與商標。本擴充功能為非官方的第三方工具，未受 Facebook 或 Meta Platforms, Inc. 認可、贊助，亦與其無任何關聯。
+>
+> Facebook is a product of Meta Platforms, Inc. This extension is an unofficial add-on and is not endorsed, sponsored by, or otherwise affiliated with Facebook or Meta Platforms, Inc.
+
 ## 功能
 
 - 當瀏覽 Facebook 文章頁面時（格式：`https://www.facebook.com/<account_name>/posts/pfbidXXXXXXX`）
@@ -69,7 +75,7 @@ fb-post-url-unhash/
 ├── popup.html         # 彈出視窗的 HTML 介面
 ├── popup.js          # 彈出視窗的邏輯腳本
 ├── icons/
-│   └── icon-64.png   # 擴充功能圖示
+│   └── icon-*.png    # 擴充功能圖示（16/32/48/64/128）
 └── README.md         # 此說明檔案
 ```
 
